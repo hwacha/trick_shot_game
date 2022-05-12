@@ -61,17 +61,22 @@ func handle_input(player):
 
 
 func _physics_process(delta):
+	if self.get_parent() in get_tree().get_nodes_in_group("character"):
+		return
+
 	# Grab other players
-	self.modulate = Color(0,1,0)
-	if (is_character_active):
+#	self.modulate = Color(0,1,0)
+	if is_character_active:
 		for c in get_tree().get_nodes_in_group("character"):
 			var c_origin = c.transform.origin
 			var s_origin = self.transform.origin
-			if (c != self):
+			if (c != self and c.get_parent() != self):
 				if (s_origin.distance_squared_to(c_origin) <= grab_distance_sqr):
-					# c.transform.origin = self.transform.origin + Vector2(0, -32)
-					c.modulate = Color(1,0,0)
-				#if (Vector2.UP.dot((c_origin - s_origin).normalized()) > cos(grab_angle)):
+					self.get_parent().remove_child(c)
+					self.add_child(c)
+					c.transform.origin = Vector2(0, -32)
+#					c.modulate = Color(1,0,0)
+#					if (Vector2.UP.dot((c_origin - s_origin).normalized()) > cos(grab_angle)):
 				
 	
 	

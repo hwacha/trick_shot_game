@@ -18,9 +18,6 @@ extents = Vector2( 400, 64 )
 margin_right = 800.0
 margin_bottom = 800.0
 color = Color( 0, 0.72549, 1, 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="LeftWall" type="StaticBody2D" parent="."]
 position = Vector2( 16, 336 )
@@ -84,10 +81,10 @@ modulate = Color( 1, 1, 0, 1 )
 position = Vector2( 195.271, 195.951 )
 start_active = true
 
-[node name="Character2" parent="Characters" instance=ExtResource( 1 )]
-modulate = Color( 1, 0.6, 0.6, 1 )
-position = Vector2( 600, 656 )
-
 [node name="Character" parent="Characters" instance=ExtResource( 1 )]
 modulate = Color( 0.956863, 0.843137, 0.545098, 1 )
 position = Vector2( 400, 656 )
+
+[node name="Character2" parent="Characters" instance=ExtResource( 1 )]
+modulate = Color( 1, 0.6, 0.6, 1 )
+position = Vector2( 600, 656 )
