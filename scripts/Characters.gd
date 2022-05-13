@@ -2,16 +2,23 @@ extends Node2D
 
 onready var selector = $Selector
 
+var characters
 var selected_character
 var lock_switch = false
 
 func _ready():
-	for character in get_children():
-		if not character.name == "Selector" and not character.start_active:
+	characters = get_tree().get_nodes_in_group("character")
+	var selector_set = false
+	for i in range(len(characters)):
+		var character = characters[i]
+		character.index = i
+		if not character.name == "Selector" and \
+		   not character.start_active and \
+		   not selector_set:
 			selected_character = character
 			self.remove_child(selector)
 			selected_character.add_child(selector)
-			break
+			selector_set = true
 
 func switch_selected_character_to(new_selected_character):
 	selected_character.remove_child(selector)
@@ -29,17 +36,15 @@ func handle_input(player):
 		search_direction -= 1
 	
 	if search_direction != 0:
-		var selected_character_index : int = selected_character.get_index()
+		var selected_character_index : int = selected_character.index
 		var character_index : int = selected_character_index
-		character_index = add_and_wrap(character_index, search_direction, get_child_count())
-		
+		character_index = add_and_wrap(character_index, search_direction, len(characters))
 		while character_index != selected_character_index:
-			var new_selected_character = get_child(character_index)
+			var new_selected_character = characters[character_index]
 			if not new_selected_character.is_character_active:
 				switch_selected_character_to(new_selected_character)
 				break
-			
-			character_index = add_and_wrap(character_index, search_direction, get_child_count())
+			character_index = add_and_wrap(character_index, search_direction, len(characters))
 
 func _process(_delta):
 	lock_switch = false

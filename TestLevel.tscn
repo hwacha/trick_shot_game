@@ -76,15 +76,25 @@ anchor_bottom = 1.0
 margin_right = 3.0
 margin_bottom = 3.0
 
-[node name="Character1" parent="Characters" instance=ExtResource( 1 )]
-modulate = Color( 1, 1, 0, 1 )
+[node name="Yellow" parent="Characters" instance=ExtResource( 1 )]
 position = Vector2( 195.271, 195.951 )
 start_active = true
 
-[node name="Character" parent="Characters" instance=ExtResource( 1 )]
-modulate = Color( 0.956863, 0.843137, 0.545098, 1 )
+[node name="ColorRect" parent="Characters/Yellow" index="0"]
+self_modulate = Color( 1, 1, 0, 1 )
+
+[node name="Orange" parent="Characters" instance=ExtResource( 1 )]
 position = Vector2( 400, 656 )
 
-[node name="Character2" parent="Characters" instance=ExtResource( 1 )]
-modulate = Color( 1, 0.6, 0.6, 1 )
+[node name="ColorRect" parent="Characters/Orange" index="0"]
+self_modulate = Color( 0.956863, 0.843137, 0.545098, 1 )
+
+[node name="Red" parent="Characters" instance=ExtResource( 1 )]
 position = Vector2( 600, 656 )
+
+[node name="ColorRect" parent="Characters/Red" index="0"]
+self_modulate = Color( 1, 0.6, 0.6, 1 )
+
+[editable path="Characters/Yellow"]
+[editable path="Characters/Orange"]
+[editable path="Characters/Red"]

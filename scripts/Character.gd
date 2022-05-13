@@ -10,34 +10,38 @@ export(float) var horizontal_speed = 32 * 16
 export(float) var jump_height      = 32 * 8
 export(float) var active_jump_time = 0.4
 export(float) var inactive_jump_time = 10.0
-export(float) var grab_distance_sqr = 50 * 50
+export(float) var grab_distance = 50
 export(float) var grab_angle = PI * 1/3
 
 # dependent variables
 var gravity : float
 var initial_jump_speed : float
 var inactive_ratio : float
+var grab_norm : float
 
 # for internal use
 var velocity = Vector2(0, 0)
 var is_character_active : bool
+var index : int
+var lifter = null
+var liftee = null
 
 func _ready():
 	gravity = 2 * jump_height / (active_jump_time * active_jump_time)
 	initial_jump_speed = -2 * jump_height / active_jump_time
 	inactive_ratio = active_jump_time / inactive_jump_time
+	grab_norm = grab_distance * grab_distance
 	
 	set_character_activation(start_active)
 	
 	connect("activate_selected_character", get_parent(), "_on_Character_activate_selected_character")
 	
 func set_character_activation(is_active):
-	print("set_character_activation on " + str(self))
 	is_character_active = is_active
 	if is_active:
-		modulate.a = 1
+		self.get_node("ColorRect").self_modulate.a = 1
 	else:
-		modulate.a = 0.5
+		self.get_node("ColorRect").self_modulate.a = 0.5
 	
 func handle_input(player):
 	var pressed_leftright = false
@@ -59,29 +63,34 @@ func handle_input(player):
 	if is_on_floor() and !pressed_leftright:
 		velocity.x = 0
 
+func grab(grabbee):
+	if self == grabbee:
+		return
+	elif liftee == null:
+		# set list refs
+		self.liftee = grabbee
+		grabbee.lifter = self
+		# set transforms
+		grabbee.get_parent().remove_child(grabbee)
+		self.add_child(grabbee)
+		grabbee.transform.origin = Vector2(0, -32)
+	else:
+		liftee.grab(grabbee)
 
 func _physics_process(delta):
-	if self.get_parent() in get_tree().get_nodes_in_group("character"):
+	# Input
+	handle_input("p1")
+	
+	if lifter != null:
 		return
 
 	# Grab other players
-#	self.modulate = Color(0,1,0)
 	if is_character_active:
 		for c in get_tree().get_nodes_in_group("character"):
 			var c_origin = c.transform.origin
 			var s_origin = self.transform.origin
-			if (c != self and c.get_parent() != self):
-				if (s_origin.distance_squared_to(c_origin) <= grab_distance_sqr):
-					self.get_parent().remove_child(c)
-					self.add_child(c)
-					c.transform.origin = Vector2(0, -32)
-#					c.modulate = Color(1,0,0)
-#					if (Vector2.UP.dot((c_origin - s_origin).normalized()) > cos(grab_angle)):
-				
-	
-	
-	# Input
-	handle_input("p1")
+			if (s_origin.distance_squared_to(c_origin) <= grab_norm):
+				grab(c)
 	
 	# Handle gravity
 	var acceleration_due_to_gravity = gravity * delta
