@@ -12,6 +12,7 @@ func _ready():
 	for i in range(len(characters)):
 		var character = characters[i]
 		character.index = i
+		character.characters_root = self
 		if not character.name == "Selector" and \
 		   not character.start_active and \
 		   not selector_set:

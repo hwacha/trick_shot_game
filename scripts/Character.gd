@@ -9,9 +9,10 @@ export(bool) var start_active = false
 export(float) var horizontal_speed = 32 * 16
 export(float) var jump_height      = 32 * 8
 export(float) var active_jump_time = 0.4
-export(float) var inactive_jump_time = 10.0
+export(float) var inactive_jump_time = 0.4
 export(float) var grab_distance = 50
 export(float) var grab_angle = PI * 1/3
+export(float) var throw_speed = 32 * 24
 
 # dependent variables
 var gravity : float
@@ -23,14 +24,19 @@ var grab_norm : float
 var velocity = Vector2(0, 0)
 var is_character_active : bool
 var index : int
+var grab_lock = false
+
+# references
 var lifter = null
 var liftee = null
+var characters_root = null
 
 func _ready():
 	gravity = 2 * jump_height / (active_jump_time * active_jump_time)
 	initial_jump_speed = -2 * jump_height / active_jump_time
 	inactive_ratio = active_jump_time / inactive_jump_time
 	grab_norm = grab_distance * grab_distance
+#	throw_speed /= inactive_ratio
 	
 	set_character_activation(start_active)
 	
@@ -44,14 +50,19 @@ func set_character_activation(is_active):
 		self.get_node("ColorRect").self_modulate.a = 0.5
 	
 func handle_input(player):
-	var pressed_leftright = false
+	if is_on_floor():
+		velocity.x = 0
+
 	if is_character_active:
-		if Input.is_action_pressed(player + "_move_left"):
+		var moving_left  = Input.is_action_pressed(player + "_move_left")
+		var moving_right = Input.is_action_pressed(player + "_move_right")
+		var moving_up    = Input.is_action_pressed(player + "_move_up")
+		var moving_down  = Input.is_action_pressed(player + "_move_down")
+
+		if moving_left:
 			velocity.x = -horizontal_speed
-			pressed_leftright = true
-		if Input.is_action_pressed(player + "_move_right"):
+		if moving_right:
 			velocity.x = horizontal_speed
-			pressed_leftright = true
 		if is_on_floor() and Input.is_action_just_pressed(player + "_jump"):
 			velocity.y = initial_jump_speed
 		if Input.is_action_just_pressed(player + "_activate_character"):
@@ -59,9 +70,18 @@ func handle_input(player):
 		if Input.is_action_just_pressed(player + "_drop"):
 			velocity.x = 0
 			velocity.y = max(velocity.y, 0)
-		
-	if is_on_floor() and !pressed_leftright:
-		velocity.x = 0
+		if Input.is_action_just_pressed(player + "_throw"):
+			var direction = Vector2(0, 0)
+			if moving_left:
+				direction.x += -1
+			if moving_right:
+				direction.x +=  1
+			if moving_up:
+				direction.y += -1
+			if moving_down:
+				direction.y +=  1
+
+			throw(direction)
 
 func grab(grabbee):
 	if self == grabbee:
@@ -77,6 +97,26 @@ func grab(grabbee):
 	else:
 		liftee.grab(grabbee)
 
+func throw(direction):
+	if liftee == null:
+		return
+	
+	# reparent liftee to characters root
+	var liftee_global_position = liftee.get_global_position()
+	self.remove_child(liftee)
+	characters_root.add_child(liftee)
+	liftee.set_global_position(liftee_global_position)
+	
+	# apply impulse for throw
+	liftee.velocity = self.velocity + (direction.normalized() * throw_speed)
+	
+	# split group
+	liftee.lifter = null
+	self.liftee   = null
+	
+	grab_lock = true
+	$GrabLockTimer.start()
+
 func _physics_process(delta):
 	# Input
 	handle_input("p1")
@@ -85,7 +125,7 @@ func _physics_process(delta):
 		return
 
 	# Grab other players
-	if is_character_active:
+	if is_character_active and not grab_lock:
 		for c in get_tree().get_nodes_in_group("character"):
 			var c_origin = c.transform.origin
 			var s_origin = self.transform.origin
@@ -108,3 +148,7 @@ func _physics_process(delta):
 
 	# Handle movement
 	move_and_slide(movement_velocity, Vector2.UP)
+
+
+func _on_GrabLockTimer_timeout():
+	grab_lock = false
