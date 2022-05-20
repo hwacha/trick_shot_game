@@ -117,7 +117,15 @@ func throw(direction):
 	grab_lock = true
 	$GrabLockTimer.start()
 
+func ground():
+	velocity.y = 0
+	if liftee != null:
+		liftee.ground()
+
 func _physics_process(delta):
+	if is_on_floor():
+		ground()
+
 	# Input
 	handle_input("p1")
 	
