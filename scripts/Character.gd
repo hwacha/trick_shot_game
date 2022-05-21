@@ -13,12 +13,14 @@ export(float) var inactive_jump_time = 0.4
 export(float) var grab_distance = 50
 export(float) var grab_angle = PI * 1/3
 export(float) var throw_speed = 32 * 24
+export(float) var max_speed = 32 * 32
 
 # dependent variables
 var gravity : float
 var initial_jump_speed : float
 var inactive_ratio : float
 var grab_norm : float
+var adjusted_max_speed : float
 
 # for internal use
 var velocity = Vector2(0, 0)
@@ -37,6 +39,7 @@ func _ready():
 	inactive_ratio = active_jump_time / inactive_jump_time
 	grab_norm = grab_distance * grab_distance
 #	throw_speed /= inactive_ratio
+	adjusted_max_speed = max_speed * sqrt(2)
 	
 	set_character_activation(start_active)
 	
@@ -109,7 +112,8 @@ func throw(direction):
 	
 	# apply impulse for throw
 	liftee.velocity = self.velocity + (direction.normalized() * throw_speed)
-	
+	liftee.velocity = liftee.velocity.clamped(adjusted_max_speed)
+
 	# split group
 	liftee.lifter = null
 	self.liftee   = null
